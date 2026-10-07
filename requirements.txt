@@ -1,0 +1,10 @@
+flet==0.28.3
+flet-desktop==0.28.3
+faster-whisper
+google-genai
+pydub
+numpy
+Pillow
+python-docx
+audioop-lts; python_version >= "3.13"
+# also install ffmpeg:  winget install Gyan.FFmpeg
