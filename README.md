@@ -30,7 +30,7 @@ It pairs the two audio folders automatically, finds where every verse starts and
    - *Pass 1, text match (no AI):* the transcript is aligned against your reference `.docx` (the verse text for the recitation, the explanation text for the interpretation). This gives a first guess of where each verse starts.
    - *Pass 2, Gemini:* Gemini receives the numbered transcript, in windows of 20 verses, together with the guess. It returns the final start of each verse. It is told the isti'adha and basmala are not verses, that the interpretation opens with the surah number and name, and that no explanation words may be left out or pushed into the next verse.
 4. **Independent check.** Each verse is scored by comparing its first and last words with the reference text. A low start score means a wrong start. A low end score means words were left out or pushed into the next verse. Verses where Gemini moved the start far from the text-match guess are flagged too.
-5. **Cutting.** Starts and ends are snapped to real silence, so cuts do not land inside a word. Everything is saved to a `.verses.json` file with start and end (in seconds) for every verse in both tracks.
+5. **Cutting.** Whisper's word times are only accurate to about a quarter of a second, so they are used as a *hint*. Each boundary between two verses is searched for in the audio itself: the app finds the real pause near that point (using the recording's own noise level) and cuts inside it, leaving a short natural tail and lead-in. Every boundary is decided on its own, so one wrong timestamp cannot shift the verses after it. If no pause exists and the quietest point is still loud, the verse is flagged for Review. Everything is saved to a `.verses.json` file with start and end (in seconds) for every verse in both tracks.
 6. **Combining.** A surah with no flagged verses is built automatically. A surah with flagged verses goes to the **Review** tab first.
 
 ---
@@ -79,6 +79,8 @@ Each verse is one block:
 - The **verse text is in red**, for example `قال تعالى ﵥ… ١ﵤ`. The app keeps only the text between the ornamental brackets and ignores the verse number, the surah label and the "الآية N" label.
 - The **explanation is in normal (non-red) text** after it.
 - The number of blocks must match the verse count of the surah. If the file has extra stray red quotations, the smallest blocks are merged into the previous one.
+
+**Several verses explained together.** If the book explains consecutive verses in one block (heading like `من الآية ٨ الى الآية ٩`), the app treats them as **one unit**: both verses are recited one after the other, then the single interpretation plays. In the Review tab such a unit is shown as `8-9`. The verse numbers are read from the red text, and the units must add up exactly to the surah's verse count; otherwise the app falls back to "one block per verse".
 
 If a surah has no reference text, the app still works through Gemini alone, but **only for surahs up to 80 verses**.
 
@@ -139,6 +141,7 @@ Do not delete `_work` if you want fast re-runs and to keep your Review edits.
 | `window` | 20 | verses sent to Gemini per request |
 | `disagree_words` | 4 | flag a verse if Gemini moved its start by more than this many words |
 | `min_score` | 0.40 | flag a verse if its start/end text match is below this |
+| `snap_ms` | 400 | how far (ms) a cut may move away from Whisper's word time to reach a real pause |
 | `timeout_s` | 150 | give up on one Gemini request after this many seconds |
 
 ---

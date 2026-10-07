@@ -149,10 +149,13 @@ def main(page: ft.Page):
         d = R["data"]
         return bool(d["rec"][v - 1]["flag"] or d["taf"][v - 1]["flag"])
 
+    def vlabel(k):
+        return R["data"]["rec"][k - 1].get("label", str(k))
+
     def fill_list():
         d = R["data"]
         verse_list.controls = [ft.ListTile(
-            title=ft.Text(f"{k}", size=13), dense=True, selected=(k == R["v"]),
+            title=ft.Text(vlabel(k), size=13), dense=True, selected=(k == R["v"]),
             leading=ft.Icon(ft.Icons.WARNING_AMBER if flagged(k) else ft.Icons.CHECK, size=16,
                             color=ft.Colors.AMBER_400 if flagged(k) else ft.Colors.GREEN_400),
             on_click=lambda e, k=k: goto(k)) for k in range(1, d["verses"] + 1)]
@@ -214,7 +217,7 @@ def main(page: ft.Page):
             others = [(x["start"], x["end"]) for x in d[kind] if x["verse"] != R["v"] and x["end"] > t0
                       and x["start"] < t1]
             img.src_base64 = core.waveform_b64(R["pk"][kind], t0, t1, others, (e["start"], e["end"]), WW, HH)
-            info.value = f"{title} - verse {R['v']}:   start {e['start']:.2f}s    end {e['end']:.2f}s    " \
+            info.value = f"{title} - verse {vlabel(R['v'])}:   start {e['start']:.2f}s    end {e['end']:.2f}s    " \
                          f"(length {e['end'] - e['start']:.1f}s)"
             flag.value = ("⚠ " + e["flag"]) if e["flag"] else ""
             heard.value = "Heard:      " + e["heard"]
